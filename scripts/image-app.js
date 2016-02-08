@@ -5,6 +5,7 @@
   imageLoader.addEventListener('change', handleImage, false);
   var canvas = document.querySelector('#image');
   var ctx = canvas.getContext('2d');
+  var imgWorker = new Worker('scripts/worker.js');
 
   function handleImage(e){
     var reader = new FileReader();
@@ -35,14 +36,21 @@
   }
 
   function manipulateImage(type) {
+    //console.log('manipulateImage called w: '+ type);
     var a, b, g, i, imageData, j, length, pixel, r, ref;
     imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
     toggleButtonsAbledness();
 
     // Hint! This is where you should post messages to the web worker and
     // receive messages from the web worker.
+    imgWorker.onmessage = function(e){
+      //console.log('msg recieved: '+ e);
+      toggleButtonsAbledness();
+      return ctx.putImageData(e.data.imageData, 0, 0);
+    };
+    imgWorker.postMessage({'imageData':imageData, 'type':type});
 
+/*
     length = imageData.data.length / 4;
     for (i = j = 0, ref = length; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
       r = imageData.data[i * 4 + 0];
@@ -55,8 +63,7 @@
       imageData.data[i * 4 + 2] = pixel[2];
       imageData.data[i * 4 + 3] = pixel[3];
     }
-    toggleButtonsAbledness();
-    return ctx.putImageData(imageData, 0, 0);
+*/
   };
 
   function revertImage() {
